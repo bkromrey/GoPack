@@ -2,6 +2,7 @@ package tui
 
 import (
 	"GoPack/fileHandling"
+	"GoPack/listSort"
 	"GoPack/zmqClient"
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
@@ -67,8 +68,7 @@ func InitListScreenModelByObj(list fileHandling.PackingList) ListScreenModel {
 	return ListScreenModel{
 		fileName:    SaveDirectory + list.ListName + ".json",
 		packingList: list,
-		//header:      "      ITEM\t\t  CATEGORY\t      PACKED LOCATION\n\n",
-		header: fmt.Sprintf("      %-35s%-35s%-35s\n\n", "ITEM", "CATEGORY", "PACKED LOCATION"),
+		header:      fmt.Sprintf("      %-35s%-35s%-35s\n\n", "ITEM", "CATEGORY", "PACKED LOCATION"),
 		prompt: "\nUse either ↑ or 'k' to move your selection up and ↓ or 'j' to move down. \nUse the either the spacebar or enter key to mark/unmark the selected item as packed.\n\n" +
 			"Otherwise, type one of the following:\n\n",
 		controls: bottomInstructions.Render(menuOptions),
@@ -305,10 +305,23 @@ func sortListContents(list fileHandling.PackingList, sortMethod string) tea.Cmd 
 	return func() tea.Msg {
 
 		// make request of the microservice
-		sortedList := zmqClient.SendListSortRequest(list, sortMethod)
+		//sortedList := zmqClient.SendListSortRequest(list, sortMethod)
 
 		// return data
+		//return sortedListMsg{sortedList: sortedList}
+
+		var sortedList fileHandling.PackingList
+
+		// sort the list
+		if sortMethod == "ItemCategory" {
+			sortedList = listSort.SortCategory(list)
+		} else if sortMethod == "ItemLocation" {
+			sortedList = listSort.SortLocation(list)
+		}
 		return sortedListMsg{sortedList: sortedList}
+
+		//return list
+
 	}
 }
 
