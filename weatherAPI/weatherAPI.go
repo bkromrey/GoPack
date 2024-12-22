@@ -75,8 +75,11 @@ func getLatLong(location string) (string, string) {
 	return latitude, longitude
 }
 
-// callWeatherAPI makes a call to the Open-Meteo API to determine the weather forecast
-// input
+// The callWeatherAPI makes a call to the Open-Meteo API to retrieve weather forecast
+// data from Open-Meteo.
+//
+// Requires the latitude & longitude be passed in as strings, and the start and
+// end dates must be formatted in YYYY-MM-DD format.
 func callWeatherAPI(lat string, long string, startDate string, endDate string) map[string]interface{} {
 	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%v&longitude=%v&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&wind_speed_unit=mph&precipitation_unit=inch&timezone=auto&start_date=%v&end_date=%v", lat, long, startDate, endDate)
 
