@@ -3,7 +3,7 @@ package tui
 import (
 	"GoPack/fileHandling"
 	"GoPack/listSort"
-	"GoPack/zmqClient"
+	"GoPack/packedPercentage"
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"sort"
@@ -277,8 +277,9 @@ func (m ListScreenModel) GenerateItemString() string {
 func getPackedPercentage(listObject fileHandling.PackingList) tea.Cmd {
 	return func() tea.Msg {
 
-		// make request of the microservice
-		packedData := zmqClient.SendPackedPercentRequest(listObject)
+		// make request of the microservice (now has been turned into package)
+		//packedData := zmqClient.SendPackedPercentRequest(listObject)
+		packedData := packedPercentage.CountPacked(listObject)
 
 		// return response if valid
 		if packedData.TotalItems > 0 {
@@ -298,18 +299,13 @@ func calculatePercentage(numerator int, denominator int) string {
 
 // packedPercentMsg is the Msg that the getPackedPercentage Cmd returns
 type packedPercentMsg struct {
-	data zmqClient.PackedPercentageResults
+	data packedPercentage.Results
 }
 
 func sortListContents(list fileHandling.PackingList, sortMethod string) tea.Cmd {
 	return func() tea.Msg {
 
-		// make request of the microservice
-		//sortedList := zmqClient.SendListSortRequest(list, sortMethod)
-
-		// return data
-		//return sortedListMsg{sortedList: sortedList}
-
+		// make request of the microservice (which is now a package)
 		var sortedList fileHandling.PackingList
 
 		// sort the list
