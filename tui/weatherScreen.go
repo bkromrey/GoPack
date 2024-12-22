@@ -2,7 +2,7 @@ package tui
 
 import (
 	"GoPack/fileHandling"
-	"GoPack/zmqClient"
+	"GoPack/weatherAPI"
 	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"sort"
@@ -10,7 +10,7 @@ import (
 
 type WeatherScreenModel struct {
 	list     fileHandling.PackingList
-	forecast map[string]zmqClient.ForecastData
+	forecast map[string]weatherAPI.ForecastData
 	errorMsg string
 	display  string
 }
@@ -64,20 +64,22 @@ func getWeather(list fileHandling.PackingList) tea.Cmd {
 	return func() tea.Msg {
 
 		// request forecast data
-		forecastResponse := zmqClient.SendWeatherRequest(list.Destination, list.DepartDate, list.ReturnDate)
+		//forecastResponse := zmqClient.SendWeatherRequest(list.Destination, list.DepartDate, list.ReturnDate)
+		forecastResponse := weatherAPI.GetWeatherFromAPI(list.Destination, list.DepartDate, list.ReturnDate)
 
 		return forecastMsg{forecastResponse: forecastResponse}
 	}
 }
 
 type forecastMsg struct {
-	forecastResponse zmqClient.WeatherResponse
+	forecastResponse weatherAPI.WeatherResults
 }
 
 func formatForecast(m WeatherScreenModel) tea.Cmd {
 	return func() tea.Msg {
 
-		header := fmt.Sprintf("Forecast for %v from %v to %v\n\n", m.list.Destination, m.list.DepartDate, m.list.ReturnDate)
+		header := fmt.Sprintf("Forecast for %v from %v to %v\n\n",
+			m.list.Destination, m.list.DepartDate, m.list.ReturnDate)
 		header += fmt.Sprintf("%17v%6v%21v\n", "HIGH", "LOW", "CHANCE OF RAIN/SNOW")
 
 		// sort & display data for each date from oldest date to newest date

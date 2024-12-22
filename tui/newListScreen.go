@@ -186,7 +186,7 @@ func (m newListModel) View() string {
 		return final
 	}
 
-	return "booop!" // TODO
+	return ""
 }
 
 type listCreatedMsg struct {

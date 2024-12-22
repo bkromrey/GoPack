@@ -18,7 +18,7 @@ const selectIndicator = "→"
 // DEFINE OUR MODEL
 type ListScreenModel struct {
 	// TODO should this contain all the JSON variables?
-	// TODO or would it be more convienent to just store everythign as a single JSON, then
+	// or would it be more convienent to just store everythign as a single JSON, then
 	// updates and edits wouldn't be scattered about
 	fileName         string
 	packingList      fileHandling.PackingList
@@ -39,7 +39,7 @@ var menuOptions = fmt.Sprintf("%-35v\t", "  A: Add item to list") +
 	fmt.Sprintf("%-35v\t", "  S: Save and close list") +
 	fmt.Sprintf("%-35v\n", "L: Sort packing list by packed location") +
 	fmt.Sprintf("%-35v\t", "  Q: Close without saving") +
-	fmt.Sprintf("%-35v\n", "W: Check weather at your destination") +
+	fmt.Sprintf("%-35v\n", "W: Check weatherAPI at your destination") +
 	fmt.Sprintf("%-35v\t", "ESC: Back to main menu") +
 	fmt.Sprintf("%-35v\n", "E: Export list as PDF & email to yourself")
 
@@ -128,7 +128,7 @@ func (m ListScreenModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			case "l":
 				return m, sortListContents(m.packingList, "ItemLocation")
 
-			// go to weather screen
+			// go to weatherAPI screen
 			case "w":
 				return InitWeatherScreenModel(m.packingList), getWeather(m.packingList)
 
