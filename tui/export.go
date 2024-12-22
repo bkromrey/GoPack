@@ -2,10 +2,10 @@ package tui
 
 import (
 	"GoPack/fileHandling"
-	"GoPack/zmqClient"
+	"GoPack/generatePDF"
+	"fmt"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
-	"strings"
 )
 
 type ExportModel struct {
@@ -20,7 +20,8 @@ type ExportModel struct {
 }
 
 const (
-	usernameInput textInput = iota
+	functionInput textInput = iota
+	usernameInput
 	passwordInput
 	doneInput
 	exportDone
@@ -39,8 +40,10 @@ func InitExportModel(list fileHandling.PackingList) ExportModel {
 
 	return ExportModel{
 		list: list,
-		prompt: "Packing list will be automatically saved as a PDF. \nTo email this PDF " +
-			"to yourself, type in your email address and app password.",
+		prompt: "Packing list will be automatically saved as a PDF. \n\n" +
+			"[1] Export as PDF only.\n" +
+			"[2] Export as PDF & email it to yourself.",
+		//"to yourself, type in your email address and app password.",
 		activeInput:    0,
 		usernamePrompt: usernamePrompt,
 		passwordPrompt: passwordPrompt,
@@ -55,7 +58,11 @@ func (m ExportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 
-	case exportedMsg:
+	case exportPDFMsg:
+		m.activeInput = exportDone
+		m.results = msg.response
+
+	case exportEmailPDFMsg:
 		m.activeInput = exportDone
 		m.results = msg.response
 
@@ -67,6 +74,16 @@ func (m ExportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "esc":
 			return PackingListTUI, GoToPackingListObj(m.list)
+
+		case "1":
+			if m.activeInput == functionInput {
+				return m, exportPDF(m.list)
+			}
+
+		case "2":
+			if m.activeInput == functionInput {
+				return m, exportEmailPDF(m.list)
+			}
 
 		// handle enter key based on which input is active
 		case "enter":
@@ -92,7 +109,7 @@ func (m ExportModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// update active prompt
 				m.activeInput = doneInput
 
-				return m, exportList(m)
+				return m, exportEmailPDF(m.list)
 			}
 
 		}
@@ -115,6 +132,9 @@ func (m ExportModel) View() string {
 
 	switch m.activeInput {
 
+	case functionInput:
+		return m.prompt
+
 	case usernameInput:
 		return m.prompt + "\n\n" + m.usernamePrompt.View()
 
@@ -132,32 +152,61 @@ func (m ExportModel) View() string {
 
 // COMMANDS ----------------------------------------
 
-func exportList(m ExportModel) tea.Cmd {
+//func exportList(m ExportModel) tea.Cmd {
+//	return func() tea.Msg {
+//
+//		// make request of the microservice - receive a string in response
+//		response := zmqClient.SendExportRequest(m.list, m.username, m.password)
+//
+//		// clean up response - manually clean up long string response from microservice
+//		response = strings.TrimLeft(response, "Msg{Frames:{\"")
+//		responseSplit := strings.Split(response, "File")
+//		var formattedResponse string
+//
+//		formattedResponse = responseSplit[0] + "\nFile" + responseSplit[1]
+//
+//		if strings.Contains(formattedResponse, "Emailed to") {
+//			split2 := strings.Split(formattedResponse, "Emailed to")
+//			formattedResponse = split2[0] + "\nEmailed to" + split2[1]
+//		}
+//
+//		formattedResponse = strings.TrimRight(formattedResponse, "\"}}")
+//
+//		return exportedMsg{
+//			response: formattedResponse,
+//		}
+//	}
+//}
+//
+//type exportedMsg struct {
+//	response string
+//}
+
+type exportPDFMsg struct {
+	response string
+}
+
+func exportPDF(list fileHandling.PackingList) tea.Cmd {
 	return func() tea.Msg {
+		_, response := generatePDF.GeneratePDF(list)
 
-		// make request of the microservice - receive a string in response
-		response := zmqClient.SendExportRequest(m.list, m.username, m.password)
-
-		// clean up response - manually clean up long string response from microservice
-		response = strings.TrimLeft(response, "Msg{Frames:{\"")
-		responseSplit := strings.Split(response, "File")
-		var formattedResponse string
-
-		formattedResponse = responseSplit[0] + "\nFile" + responseSplit[1]
-
-		if strings.Contains(formattedResponse, "Emailed to") {
-			split2 := strings.Split(formattedResponse, "Emailed to")
-			formattedResponse = split2[0] + "\nEmailed to" + split2[1]
-		}
-
-		formattedResponse = strings.TrimRight(formattedResponse, "\"}}")
-
-		return exportedMsg{
-			response: formattedResponse,
-		}
+		return exportPDFMsg{response: response}
 	}
 }
 
-type exportedMsg struct {
+type exportEmailPDFMsg struct {
 	response string
+}
+
+func exportEmailPDF(list fileHandling.PackingList) tea.Cmd {
+	return func() tea.Msg {
+		fileLoc, response := generatePDF.GeneratePDF(list)
+
+		fmt.Print(fileLoc)
+		// TODO SEND EMAIL OF PDF
+		return exportPDFMsg{
+			response: response,
+		}
+
+	}
 }

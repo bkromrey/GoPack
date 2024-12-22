@@ -314,10 +314,8 @@ func sortListContents(list fileHandling.PackingList, sortMethod string) tea.Cmd 
 		} else if sortMethod == "ItemLocation" {
 			sortedList = listSort.SortLocation(list)
 		}
+
 		return sortedListMsg{sortedList: sortedList}
-
-		//return list
-
 	}
 }
 
